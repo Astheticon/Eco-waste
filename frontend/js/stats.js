@@ -11,8 +11,8 @@ import {
     setUserPoints,
     chartInstances,
     isDark,
-    currentLang,
-} from './stats.js';
+    currentLang
+} from './state.js';
 
 import { fetchWasteInsight } from './api.js';
 
