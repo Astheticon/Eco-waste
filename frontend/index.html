@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en" data-theme=""><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoWaste Pro — AI Smart Waste · Chennai Ward 12 · International Award Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Anti-FOUC: apply saved theme before paint -->
+    <script>try{if(localStorage.getItem('ecowaste_theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}</script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2ecc71">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="description" content="AI-powered smart waste management for Chennai Ward 12 — UN SDG 11,12,13,17">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♻️</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Skip to content for keyboard/screen reader users -->
+    <a href="#mainContent" class="skip-to-content">Skip to main content</a>
+    <!-- Offline indicator -->
+    <div id="offlineBar">📵 You are offline — some features unavailable</div>
+
+    <!-- API Security Disclaimer Banner -->
+    <div id="apiDisclaimerBanner">
+        <span style="font-size:1.1rem;flex-shrink:0">🔐</span>
+        <div style="flex:1">
+            <span data-i18n="api_disclaimer_text">EcoBot runs fully offline — no API key required. AI Scanner &amp; Vision features use Anthropic API.</span>
+        </div>
+        <a href="https://docs.anthropic.com/en/api/getting-started" target="_blank" rel="noopener" style="color:#fff;opacity:0.85;font-size:0.75rem;white-space:nowrap;text-decoration:underline" data-i18n="api_disclaimer_link">Learn more</a>
+        <button onclick="document.getElementById('apiDisclaimerBanner').style.display='none'" style="background:none;border:none;color:white;cursor:pointer;font-size:1rem;opacity:0.7;padding:0 0.25rem;flex-shrink:0">✕</button>
+    </div>
+
+    <!-- PWA Install Banner -->
+    <div id="pwaInstallBanner">
+        <span style="font-size:1.4rem">📲</span>
+        <div style="flex:1">
+            <div style="font-weight:700;font-size:0.9rem">Install EcoWaste Pro</div>
+            <div style="font-size:0.75rem;opacity:0.7">Works offline · Home screen shortcut</div>
+        </div>
+        <button class="pwa-install-btn" onclick="installPWA()">Install</button>
+        <button class="pwa-dismiss" onclick="this.closest('#pwaInstallBanner').classList.remove('show')">✕</button>
+    </div>
+
+    <!-- Autopilot / Presentation Mode Overlay -->
+    <div id="autopilotOverlay">
+        <div class="ap-step-label" id="apStepLabel">Step 1 of 6</div>
+        <div class="ap-title" id="apTitle">Loading…</div>
+        <div class="ap-desc"  id="apDesc"></div>
+        <div class="ap-dots"  id="apDots"></div>
+        <div class="ap-timer-bar"><div class="ap-timer-fill" id="apTimerFill"></div></div>
+        <div class="ap-buttons">
+            <button class="ap-btn-next" onclick="apNextStep()">Next Step →</button>
+            <button class="ap-btn-stop" onclick="stopAutopilot()">✕ Exit Presentation</button>
+        </div>
+    </div>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="login-page" style="display: flex;">
+
+        <!-- Top-right: Demo Mode Button -->
+        <button class="login-demo-corner-btn" onclick="launchDemoMode()">
+            <span class="demo-btn-glow"></span>
+            <span style="font-size:1.1rem">🚀</span>
+            <span class="login-demo-corner-text">
+                <strong data-i18n="demo_launch">Launch Demo Mode</strong>
+                <small data-i18n="demo_sub">Realistic data · No login needed</small>
+            </span>
+            <span style="opacity:0.7;font-size:1rem">→</span>
+        </button>
+
+        <!-- Top-center: Language Selector -->
+        <div class="login-top-lang">
+            <span class="login-top-lang-label" data-i18n="select_language">🌐 Language</span>
+            <div class="login-top-lang-btns">
+                <button class="login-lang-btn active" data-lang="en" onclick="setLang('en')">🇬🇧 English</button>
+                <button class="login-lang-btn" data-lang="ta" onclick="setLang('ta')">🇮🇳 தமிழ்</button>
+                <button class="login-lang-btn" data-lang="hi" onclick="setLang('hi')">🇮🇳 हिंदी</button>
+                <button class="login-lang-btn" data-lang="te" onclick="setLang('te')">🇮🇳 తెలుగు</button>
+            </div>
+        </div>
+
+        <div class="login-container">
+            <div class="login-left">
+                <h1>♻️ EcoWaste Pro</h1>
+                <p data-i18n="login_tagline">Smart Waste Management for a Sustainable Future</p>
+                <div class="login-features">
+                    <div class="feature-item"><div class="feature-icon">🤖</div><div><strong data-i18n="feat_scanner">AI Scanner</strong><div style="font-size: 0.9rem; opacity: 0.8;" data-i18n="feat_scanner_sub">Identify waste instantly</div></div></div>
+                    <div class="feature-item"><div class="feature-icon">🚛</div><div><strong data-i18n="feat_pickup">Request Pickup</strong><div style="font-size: 0.9rem; opacity: 0.8;" data-i18n="feat_pickup_sub">On-demand collection</div></div></div>
+                    <div class="feature-item"><div class="feature-icon">🏆</div><div><strong data-i18n="feat_rewards">Earn Rewards</strong><div style="font-size: 0.9rem; opacity: 0.8;" data-i18n="feat_rewards_sub">Points for eco actions</div></div></div>
+                    <div class="feature-item"><div class="feature-icon">📊</div><div><strong data-i18n="feat_impact">Track Impact</strong><div style="font-size: 0.9rem; opacity: 0.8;" data-i18n="feat_impact_sub">See your contribution</div></div></div>
+                </div>
+            </div>
+            <div class="login-right">
+                <h2 data-i18n="login_welcome">Welcome Back!</h2>
+                <p class="login-subtitle" data-i18n="login_subtitle">Sign in to continue your eco journey</p>
+                <div class="login-tabs">
+                    <button class="login-tab active" onclick="switchLoginTab('email')" data-i18n="login_tab_email">Email</button>
+                    <button class="login-tab" onclick="switchLoginTab('phone')" data-i18n="login_tab_phone">Phone</button>
+                </div>
+                <form id="emailLoginForm" class="login-form active" onsubmit="handleLogin(event, 'email')">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="login_email_label">Email Address</label>
+                        <input type="email" id="emailInput" class="form-input" data-i18n-placeholder="login_email_ph" placeholder="Enter your email" required aria-label="Email address">
+                        <div id="emailError" class="error-message" data-i18n="login_email_error">Please enter a valid email</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="login_password_label">Password</label>
+                        <input type="password" id="emailPassword" class="form-input" data-i18n-placeholder="login_password_ph" placeholder="Enter your password" required aria-label="Password" minlength="1">
+                        <div style="font-size:0.72rem;color:#888;margin-top:0.25rem">✨ Demo mode — any password works</div>
+                        <div id="passwordError" class="error-message" data-i18n="login_password_error">Password is required</div>
+                    </div>
+                    <button type="submit" class="login-btn" data-i18n="login_btn_email" aria-label="Sign in with email">Sign In with Email</button>
+                </form>
+                <form id="phoneLoginForm" class="login-form" onsubmit="handleLogin(event, 'phone')">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="login_phone_label">Phone Number</label>
+                        <input type="tel" id="phoneInput" class="form-input" placeholder="+91 98765 43210" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="login_password_label">Password</label>
+                        <input type="password" id="phonePassword" class="form-input" data-i18n-placeholder="login_password_ph" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="login-btn" data-i18n="login_btn_phone">Sign In with Phone</button>
+                </form>
+                <div class="divider"><span data-i18n="login_or">OR</span></div>
+                <div class="social-login">
+                    <button class="social-btn" onclick="socialLogin('google')" aria-label="Sign in with Google"><span>🔵</span><span>Google</span></button>
+                    <button class="social-btn" onclick="socialLogin('facebook')" aria-label="Sign in with Facebook"><span>📘</span><span>Facebook</span></button>
+                </div>
+                <div class="signup-link" data-i18n="login_no_account">Don't have an account? <a href="#" onclick="showNotification('👋','Signup opens after demo!'); return false;" data-i18n="login_signup">Sign Up</a></div>
+                <div class="demo-divider"><span data-i18n="hackathon_demo">✨ HACKATHON DEMO</span></div>
+                <button class="present-btn" onclick="startAutopilot()">
+                    🎤 <span data-i18n="presentation_mode">Launch Presentation Mode</span> <span style="opacity:0.6;font-size:0.85rem" data-i18n="press_p">(or press P)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="main-app">
+        <header>
+            <div class="container">
+                <div class="logo"><span>♻️</span><span>EcoWaste Pro</span></div>
+                <nav>
+                    <a onclick="openTab('dashboard')" data-i18n="nav_dashboard">Dashboard</a>
+                    <a onclick="openTab('scanner')" data-i18n="nav_scanner">AI Scanner</a>
+                    <a onclick="openTab('pickup')" data-i18n="nav_bins">My Bins</a>
+                </nav>
+                <div class="user-menu">
+                    <div class="points-badge"><span>🏆</span><span id="headerPoints">0</span></div>
+                    <div class="user-info"><div class="user-avatar">👤</div><span id="userDisplayName">Google User</span></div>
+                    <div class="header-controls">
+                        <button class="theme-btn" id="themeModeBtn" onclick="toggleDarkMode()">🌙 Dark</button>
+                        <div class="header-lang-switcher">
+                            <button class="header-lang-btn active" data-lang="en" onclick="setLang('en')">EN</button>
+                            <button class="header-lang-btn" data-lang="ta" onclick="setLang('ta')">தமிழ்</button>
+                            <button class="header-lang-btn" data-lang="hi" onclick="setLang('hi')">हिं</button>
+                            <button class="header-lang-btn" data-lang="te" onclick="setLang('te')">తె</button>
+                        </div>
+                    </div>
+                    <button class="logout-btn" onclick="handleLogout()" data-i18n="logout">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <section class="hero" role="banner">
+            <div class="container">
+                <h1 data-i18n="hero_title">🌍 Smart Waste Management Platform</h1>
+                <div class="hero-stats-row" aria-label="Chennai waste statistics">
+                    <div class="hero-stat"><div class="hero-stat-val" id="heroTonnes">4,800</div><div class="hero-stat-lbl">Tonnes Waste/Day in Chennai</div></div>
+                    <div class="hero-stat"><div class="hero-stat-val" id="heroCO2">4.2t</div><div class="hero-stat-lbl">CO₂ Saved This Month</div></div>
+                    <div class="hero-stat"><div class="hero-stat-val" id="heroScans">1,247</div><div class="hero-stat-lbl">AI Scans by Ward 12</div></div>
+                    <div class="hero-stat"><div class="hero-stat-val" id="heroMembers">847</div><div class="hero-stat-lbl">Active Citizens</div></div>
+                </div>
+                <div class="hero-trees-bar">🌳 Your ward's recycling = <span id="heroTrees">14</span> trees planted this month</div>
+            </div>
+        </section>
+
+        <!-- UN SDG Alignment Banner -->
+        <div class="sdg-banner">
+            <div>
+                <div class="sdg-label" data-i18n="sdg_label">🌐 UN Sustainable Development Goals</div>
+                <div class="sdg-chips">
+                    <div class="sdg-chip"><span class="sdg-num">11</span> <span data-i18n="sdg_11">Sustainable Cities</span></div>
+                    <div class="sdg-chip"><span class="sdg-num">12</span> <span data-i18n="sdg_12">Responsible Consumption</span></div>
+                    <div class="sdg-chip"><span class="sdg-num">13</span> <span data-i18n="sdg_13">Climate Action</span></div>
+                    <div class="sdg-chip"><span class="sdg-num">17</span> <span data-i18n="sdg_17">Partnerships</span></div>
+                </div>
+            </div>
+            <div class="sdg-banner-stat">
+                <div class="sub" data-i18n="sdg_co2_label">CO₂ saved this month</div>
+                <div class="big">4.2t</div>
+                <div class="sub" data-i18n="ward_name">Ward 12 · Anna Nagar East</div>
+            </div>
+        </div>
+
+        <div class="tab-navigation">
+            <div class="tabs" role="tablist" aria-label="Main navigation tabs">
+                <button class="tab-btn active" onclick="openTab('dashboard')" data-i18n="tab_dashboard" role="tab" aria-selected="true">📊 My Dashboard</button>
+                <button class="tab-btn" onclick="openTab('pickup')" data-i18n="tab_pickup" role="tab" aria-selected="false">🗑️ My Bins</button>
+                <button class="tab-btn" onclick="openTab('scanner')" data-i18n="tab_scanner" role="tab" aria-selected="false">🤖 AI Scanner</button>
+                <button class="tab-btn" onclick="openTab('map')" data-i18n="tab_map" role="tab" aria-selected="false">🗺️ Live City Map</button>
+                <button class="tab-btn" onclick="openTab('rewards')" data-i18n="tab_rewards" role="tab" aria-selected="false">🏆 Rewards</button>
+                <button class="tab-btn" onclick="openTab('guide')" data-i18n="tab_guide" role="tab" aria-selected="false">📚 Recycling Guide</button>
+                <button class="tab-btn" onclick="openTab('community')" data-i18n="tab_community" role="tab" aria-selected="false">🏘️ Ward Challenges</button>
+                <button class="tab-btn" onclick="openTab('statistics')" data-i18n="tab_statistics" role="tab" aria-selected="false">📈 Statistics</button>
+                <button class="tab-btn" onclick="openTab('certificate')" data-i18n="tab_certificate" role="tab" aria-selected="false">🎓 Certificate</button>
+            </div>
+        </div>
+
+        <main class="container" id="mainContent" role="main">
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <!-- Ward Impact Banner -->
+                <div class="ward-impact-banner">
+                    <div class="wib-left">
+                        <div class="wib-eyebrow">Ward 12 · Anna Nagar East · Monthly Impact</div>
+                        <div class="wib-number"><span id="wibTonnes">0.0</span><span class="wib-unit">CO₂ saved</span></div>
+                        <div class="wib-sub">Collectively by 847 active citizens this month 🌱</div>
+                    </div>
+                    <div class="wib-stats">
+                        <div class="wib-stat-item"><div class="wib-stat-val" id="wibKg">0</div><div class="wib-stat-lbl">kg Recycled</div></div>
+                        <div class="wib-stat-item"><div class="wib-stat-val" id="wibScans">0</div><div class="wib-stat-lbl">AI Scans</div></div>
+                        <div class="wib-stat-item"><div class="wib-stat-val" id="wibMembers">0</div><div class="wib-stat-lbl">Members</div></div>
+                    </div>
+                </div>
+                <h2 style="margin-bottom: 2rem;" data-i18n="dash_title">Your Waste Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card skeleton-card"><div class="stat-icon">🗑️</div><div class="stat-value" id="totalCollections">0</div><div class="stat-label" data-i18n="stat_collections">Collections This Month</div><div class="stat-trend" data-i18n="stat_collections_sub">🌱 Start your journey!</div></div>
+                    <div class="stat-card skeleton-card"><div class="stat-icon">♻️</div><div class="stat-value" id="statRecycled">0 kg</div><div class="stat-label" data-i18n="stat_recycled">Recycled This Month</div><div class="stat-trend" id="statRecycledTrend" data-i18n="stat_recycled_sub">🌱 Start recycling today!</div></div>
+                    <div class="stat-card skeleton-card" style="border-left:4px solid #2ecc71"><div class="stat-icon">🌱</div><div class="stat-value" id="statCO2" style="color:#27ae60">0 kg</div><div class="stat-label" data-i18n="stat_co2">CO₂ Saved</div><div class="stat-trend" id="statCO2Trend" data-i18n="stat_co2_sub">🌱 Make your first impact!</div></div>
+                    <div class="stat-card skeleton-card"><div class="stat-icon">🏆</div><div class="stat-value" id="dashboardPoints">0</div><div class="stat-label" data-i18n="stat_points">Reward Points</div><div class="stat-trend" data-i18n="stat_points_sub">🏆 Earn points by scanning!</div></div>
+                </div>
+                <div class="bin-status-container">
+                    <h3>📊 Quick Bin Overview</h3>
+                    <div class="bin-grid">
+                        <div class="bin-card"><div class="bin-icon">🗑️</div><div class="bin-type">General Waste</div><div class="fill-level-bar"><div class="fill-level-fill" style="height:10%">10%</div></div><div class="bin-info" style="color:var(--primary-green);font-weight:600">✅ Good Level</div></div>
+                        <div class="bin-card"><div class="bin-icon">♻️</div><div class="bin-type">Recyclables</div><div class="fill-level-bar"><div class="fill-level-fill" style="height:15%">15%</div></div><div class="bin-info">Good Level</div></div>
+                        <div class="bin-card"><div class="bin-icon">🌿</div><div class="bin-type">Organic Waste</div><div class="fill-level-bar"><div class="fill-level-fill" style="height:5%">5%</div></div><div class="bin-info">Good Level</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Scanner Tab -->
+            <div id="scanner" class="tab-content">
+                <h2 style="margin-bottom: 2rem;" data-i18n="scanner_title">🤖 AI Waste Scanner</h2>
+                <div style="background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:1px solid #c8e6c9;border-radius:14px;padding:1rem 1.5rem;margin-bottom:2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+                    <div style="font-size:2rem">&#x1F916;</div>
+                    <div>
+                        <div style="font-weight:700;color:#1a6b3c;margin-bottom:0.2rem" data-i18n="scanner_powered">Local AI Scanner · Works 100% Offline ✓</div>
+                        <div style="color:#555;font-size:0.9rem">Upload any waste photo &mdash; Claude identifies the item, classifies it, and gives you Chennai-specific disposal steps. Earn <strong style="color:#27ae60">+15 points</strong> per scan!</div>
+                    </div>
+                </div>
+                <div class="scanner-container">
+                    <div id="uploadArea" class="upload-area">
+                        <div class="upload-icon">📸</div>
+                        <h3 data-i18n="upload_title">Upload or Capture Image</h3>
+                        <!-- Camera-first action buttons -->
+                        <div class="scanner-action-btns">
+                            <button class="camera-capture-btn" onclick="startCamera()">
+                                📷 <span>Live Camera</span>
+                            </button>
+                            <button class="upload-file-btn" onclick="document.getElementById('imageUpload').click()">
+                                📁 <span>Upload File</span>
+                            </button>
+                        </div>
+                        <p style="color:#aaa;font-size:0.82rem;margin-top:0.5rem">JPG, PNG, WEBP &bull; Max 5 MB</p>
+                        <div style="margin-top:1.25rem;display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap">
+                            <span style="background:#e8f5e9;color:#27ae60;font-size:0.78rem;padding:0.3rem 0.75rem;border-radius:20px;font-weight:600">&#x267B;&#xFE0F; Plastic</span>
+                            <span style="background:#fff8e1;color:#f57c00;font-size:0.78rem;padding:0.3rem 0.75rem;border-radius:20px;font-weight:600">&#x1F33F; Organic</span>
+                            <span style="background:#ffebee;color:#c62828;font-size:0.78rem;padding:0.3rem 0.75rem;border-radius:20px;font-weight:600">&#x26A0;&#xFE0F; Hazardous</span>
+                            <span style="background:#ede7f6;color:#6a1b9a;font-size:0.78rem;padding:0.3rem 0.75rem;border-radius:20px;font-weight:600">&#x1F4F1; E-Waste</span>
+                        </div>
+                        <input type="file" id="imageUpload" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                        <!-- Demo Scan Samples -->
+                        <div class="demo-samples-wrap">
+                            <div class="demo-samples-label" data-i18n="demo_samples_label">— or try a built-in demo image —</div>
+                            <div class="demo-samples-row">
+                                <button class="demo-sample-btn" onclick="loadDemoScan(0)"><span>🍶</span> Plastic Bottle</button>
+                                <button class="demo-sample-btn" onclick="loadDemoScan(1)"><span>📦</span> Cardboard Box</button>
+                                <button class="demo-sample-btn" onclick="loadDemoScan(2)"><span>📱</span> Old Phone</button>
+                                <button class="demo-sample-btn" onclick="loadDemoScan(3)"><span>🥦</span> Food Scraps</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Live Camera View -->
+                    <div id="cameraArea" style="display:none;flex-direction:column;align-items:center;gap:1rem;padding:1.5rem">
+                        <video id="cameraVideo" autoplay playsinline style="width:100%;max-width:480px;border-radius:14px;background:#000;box-shadow:0 4px 20px rgba(0,0,0,0.2)"></video>
+                        <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
+                            <button onclick="snapCamera()" style="background:linear-gradient(135deg,#2ecc71,#16a085);color:white;border:none;padding:0.85rem 2rem;border-radius:30px;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:0.5rem">📸 Snap &amp; Analyse</button>
+                            <button onclick="stopCamera()" style="background:#f8f9fa;border:2px solid #ddd;padding:0.85rem 1.5rem;border-radius:30px;font-size:0.95rem;cursor:pointer">✕ Cancel</button>
+                        </div>
+                    </div>
+                    <div id="previewContainer" class="preview-container">
+                        <img id="previewImage" class="preview-image" alt="Preview">
+                        <div class="scan-buttons">
+                            <button class="scan-btn btn-primary" onclick="analyzeImage()" style="background:linear-gradient(135deg,#2ecc71,#16a085);padding:0.85rem 2.5rem;font-size:1.05rem;border-radius:30px;display:inline-flex;align-items:center;gap:0.5rem">🔍 Scan Waste — No API Needed <span style="background:rgba(255,255,255,0.25);font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:10px;font-weight:800">LOCAL AI</span></button>
+                            <button class="scan-btn btn-secondary" onclick="clearImage()">🗑️ Clear</button>
+                        </div>
+                    </div>
+                    <div id="scannerResults" class="scanner-results">
+                        <div style="text-align: center; padding: 3rem; color: #999;"><div style="font-size: 4rem; margin-bottom: 1rem;">🔍</div><h3 data-i18n="no_analysis">No Analysis Yet</h3><p data-i18n="no_analysis_sub">Upload or capture an image to get started</p></div>
+                    </div>
+                </div>
+                <div class="scanner-container">
+                    <h3 style="margin-bottom: 1rem;" data-i18n="recent_scans">📋 Recent Scans</h3>
+                    <div id="recentScans" class="recent-scans-grid"><p style="text-align: center; color: #999; padding: 2rem;">No recent scans yet.</p></div>
+                </div>
+            </div>
+
+            <!-- Recycling Guide Tab -->
+            <div id="guide" class="tab-content">
+                <!-- AI Guide Query Bar -->
+                <div class="guide-ai-wrap">
+                    <h2 style="margin-bottom:1rem" data-i18n="guide_title">📚 Complete Recycling Guide</h2>
+                    <p style="color:#666;margin-bottom:1rem;font-size:0.93rem" data-i18n="guide_subtitle">Ask AI about any item — get instant Chennai-specific disposal guidance.</p>
+                    <div class="guide-ai-bar">
+                        <input id="guideAiInput" class="guide-ai-input" type="text"
+                               placeholder="Type any item e.g. &quot;milk carton&quot;, &quot;old battery&quot;…"
+                               onkeydown="if(event.key==='Enter')queryAiGuide()">
+                        <button class="guide-ai-btn" onclick="queryAiGuide()">🤖 Ask AI</button>
+                    </div>
+                    <div id="guideAiResult" class="guide-ai-result"></div>
+                </div>
+                <div class="guide-grid">
+                    <div class="guide-card"><div class="guide-icon">♻️</div><div class="guide-title">Plastics &amp; Bottles</div><div class="guide-description">Most plastic containers and bottles can be recycled</div><div class="guide-examples"><h4>✅ Accepted:</h4><ul><li>Water bottles</li><li>Milk jugs</li><li>Detergent bottles</li></ul><h4 style="margin-top:1rem">❌ Not Accepted:</h4><ul style="color:var(--danger-red)"><li>Plastic bags</li><li>Styrofoam</li></ul></div></div>
+                    <div class="guide-card"><div class="guide-icon">📄</div><div class="guide-title">Paper &amp; Cardboard</div><div class="guide-description">Clean paper and cardboard items</div><div class="guide-examples"><h4>✅ Accepted:</h4><ul><li>Newspapers</li><li>Cardboard boxes</li><li>Office paper</li></ul><h4 style="margin-top:1rem">❌ Not Accepted:</h4><ul style="color:var(--danger-red)"><li>Wax-coated paper</li><li>Greasy pizza boxes</li></ul></div></div>
+                    <div class="guide-card"><div class="guide-icon">🍾</div><div class="guide-title">Glass &amp; Metal</div><div class="guide-description">Bottles, jars, cans, and metal items</div><div class="guide-examples"><h4>✅ Accepted:</h4><ul><li>Glass bottles</li><li>Aluminum cans</li><li>Steel cans</li></ul><h4 style="margin-top:1rem">❌ Not Accepted:</h4><ul style="color:var(--danger-red)"><li>Broken glass</li><li>Ceramics</li></ul></div></div>
+                    <div class="guide-card"><div class="guide-icon">🌿</div><div class="guide-title">Organic Waste</div><div class="guide-description">Food scraps and yard waste for composting</div><div class="guide-examples"><h4>✅ Accepted:</h4><ul><li>Fruit &amp; vegetable scraps</li><li>Coffee grounds</li><li>Eggshells</li></ul><h4 style="margin-top:1rem">❌ Not Accepted:</h4><ul style="color:var(--danger-red)"><li>Meat &amp; dairy</li><li>Pet waste</li></ul></div></div>
+                    <div class="guide-card"><div class="guide-icon">🔋</div><div class="guide-title">Electronics &amp; Batteries</div><div class="guide-description">E-waste requires special handling</div><div class="guide-examples"><h4>✅ E-waste Centers:</h4><ul><li>Smartphones</li><li>Batteries</li><li>Cables &amp; chargers</li></ul><h4 style="margin-top:1rem">⚠️ Special Handling:</h4><ul style="color:var(--warning-orange)"><li>Remove batteries first</li><li>Wipe device data</li></ul></div></div>
+                    <div class="guide-card"><div class="guide-icon">⚠️</div><div class="guide-title">Hazardous Waste</div><div class="guide-description">Requires special disposal facilities</div><div class="guide-examples"><h4>⚠️ Hazardous Items:</h4><ul><li>Paint &amp; chemicals</li><li>Motor oil</li><li>Pesticides</li></ul><h4 style="margin-top:1rem">📍 Disposal:</h4><ul style="color:var(--danger-red)"><li>Take to hazardous waste facility</li><li>Never pour down drain</li></ul></div></div>
+                </div>
+            </div>
+
+            <!-- My Bins & Pickup Tab -->
+            <div id="pickup" class="tab-content">
+                <h2 style="margin-bottom: 2rem;">🗑️ My Bins &amp; Pickup Requests</h2>
+                <div class="emergency-request">
+                    <h3 data-i18n="emergency_title">🚨 Need Immediate Pickup?</h3>
+                    <p style="margin-bottom: 1rem;" data-i18n="emergency_sub">Request emergency collection for all full bins</p>
+                    <button class="emergency-btn" onclick="requestEmergencyPickup()" data-i18n="emergency_btn">Request Emergency Pickup Now</button>
+                </div>
+                <div class="bin-status-container">
+                    <h3 data-i18n="bins_status">Your Bins Status</h3>
+                    <div class="bin-grid" id="binGrid"></div>
+                </div>
+                <div class="pickup-requests-panel">
+                    <h3>📦 Active Pickup Requests</h3>
+                    <div id="activeRequests"><p style="text-align: center; color: #999; padding: 2rem;">No active pickup requests</p></div>
+                </div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div id="statistics" class="tab-content">
+                <h2 style="margin-bottom: 2rem;" data-i18n="stats_title">📈 Your Waste Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value" id="statRecyclingRate">0%</div><div class="stat-label" data-i18n="stat_recycling_rate">Recycling Rate</div><div class="stat-trend" id="statRecyclingRateTrend" data-i18n="stat_recycling_rate_sub">🌱 Start recycling!</div></div>
+                    <div class="stat-card"><div class="stat-icon">🌍</div><div class="stat-value" id="statWasteDiverted">0 kg</div><div class="stat-label" data-i18n="stat_diverted">Total Waste Diverted</div><div class="stat-trend" data-i18n="stat_diverted_sub">🚀 Your journey begins now</div></div>
+                    <div class="stat-card"><div class="stat-icon">💧</div><div class="stat-value" id="statWaterSaved">0 L</div><div class="stat-label" data-i18n="stat_water">Water Saved</div><div class="stat-trend" data-i18n="stat_water_sub">♻️ Recycle to save water!</div></div>
+                    <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-value" id="statEnergySaved">0 kWh</div><div class="stat-label" data-i18n="stat_energy">Energy Saved</div><div class="stat-trend" data-i18n="stat_energy_sub">🌳 Plant your first impact!</div></div>
+                </div>
+                <div style="background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border:1px solid #c8e6c9;border-radius:14px;padding:1.2rem 1.5rem;margin-bottom:2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+                    <div style="font-size:2.5rem" aria-hidden="true">🌳</div>
+                    <div>
+                        <div style="font-weight:700;color:#1b5e20;font-size:1.05rem" data-i18n="stat_co2_equiv">Your CO₂ Equivalent</div>
+                        <div style="color:#555;font-size:0.9rem" data-i18n="stat_tree_desc">Equivalent to <strong id="statTreeEquiv" style="color:#2e7d32">0</strong> trees absorbing CO₂ for 1 month. Every scan counts!</div>
+                    </div>
+                </div>
+                <div class="chart-container"><h3 style="margin-bottom:1rem" data-i18n="chart_monthly">Monthly Waste Breakdown</h3><canvas id="wasteChart"></canvas></div>
+                <div class="chart-container"><h3 style="margin-bottom:1rem" data-i18n="chart_trend">Recycling Trend</h3><canvas id="recyclingTrendChart"></canvas></div>
+                <div class="chart-container"><h3 style="margin-bottom:1rem" data-i18n="chart_categories">Categories Distribution</h3><canvas id="categoryChart"></canvas></div>
+            </div>
+
+            <!-- Rewards Tab -->
+            <div id="rewards" class="tab-content">
+                <div class="rewards-header"><h2 data-i18n="rewards_title">🌿 Your Green Rewards Hub</h2><div class="total-points" id="totalPoints">0</div><p data-i18n="rewards_coins_label">Green Coins Collected</p><div class="level-badge" id="levelBadge">🌱 Level 1 - Eco Newcomer</div></div>
+                <div class="bin-status-container">
+                    <h3 style="margin-bottom:1.5rem" data-i18n="rewards_badges_title">🎖️ Badges to Unlock</h3>
+                    <div class="achievements-grid">
+                        <div class="achievement-card locked"><div class="achievement-icon">🔒</div><div class="achievement-title" data-i18n="badge_planet">Planet Protector</div><div class="achievement-points">+150 coins</div></div>
+                        <div class="achievement-card locked"><div class="achievement-icon">🔒</div><div class="achievement-title" data-i18n="badge_wizard">Waste Wizard</div><div class="achievement-points">+80 coins</div></div>
+                        <div class="achievement-card locked"><div class="achievement-icon">🔒</div><div class="achievement-title" data-i18n="badge_ocean">Ocean Guardian</div><div class="achievement-points">+60 coins</div></div>
+                        <div class="achievement-card locked"><div class="achievement-icon">🔒</div><div class="achievement-title" data-i18n="badge_zerowaste">Zero Waste Hero</div><div class="achievement-points">+120 coins</div></div>
+                        <div class="achievement-card locked"><div class="achievement-icon">🔒</div><div class="achievement-title" data-i18n="badge_community">Community Leader</div><div class="achievement-points">+90 coins</div></div>
+                        <div class="achievement-card locked"><div class="achievement-icon">🔒</div><div class="achievement-title" data-i18n="badge_carbon">Carbon Crusher</div><div class="achievement-points">+250 coins</div></div>
+                    </div>
+                </div>
+                <div class="bin-status-container">
+                    <h3 style="margin-bottom:1.5rem" data-i18n="rewards_redeem_title">🎁 Redeem Your Coins</h3>
+                    <div class="guide-grid">
+                        <div class="guide-card"><div class="guide-icon">🛒</div><div class="guide-title" data-i18n="reward_eco_store">Eco Store Voucher</div><div class="guide-description" style="color:var(--gold);font-weight:600" data-i18n="reward_eco_store_desc">500 coins = ₹100 off</div><button onclick="redeemReward('Eco Store Voucher',500)" style="margin-top:0.75rem;width:100%;background:linear-gradient(135deg,#2e7d32,#66bb6a);color:white;border:none;border-radius:10px;padding:0.5rem;font-size:0.85rem;font-weight:700;cursor:pointer" aria-label="Redeem Eco Store Voucher for 500 coins">🎁 Redeem</button></div>
+                        <div class="guide-card"><div class="guide-icon">🌳</div><div class="guide-title" data-i18n="reward_plant_tree">Plant a Tree</div><div class="guide-description" style="color:var(--gold);font-weight:600" data-i18n="reward_plant_tree_desc">300 coins = 1 tree planted</div><button onclick="redeemReward('Plant a Tree',300)" style="margin-top:0.75rem;width:100%;background:linear-gradient(135deg,#2e7d32,#66bb6a);color:white;border:none;border-radius:10px;padding:0.5rem;font-size:0.85rem;font-weight:700;cursor:pointer" aria-label="Redeem tree planting for 300 coins">🌳 Redeem</button></div>
+                        <div class="guide-card"><div class="guide-icon">🚌</div><div class="guide-title" data-i18n="reward_bus_pass">Free Bus Pass</div><div class="guide-description" style="color:var(--gold);font-weight:600" data-i18n="reward_bus_pass_desc">400 coins = 1 day pass</div><button onclick="redeemReward('Free MTC Bus Pass',400)" style="margin-top:0.75rem;width:100%;background:linear-gradient(135deg,#2e7d32,#66bb6a);color:white;border:none;border-radius:10px;padding:0.5rem;font-size:0.85rem;font-weight:700;cursor:pointer" aria-label="Redeem free bus pass for 400 coins">🚌 Redeem</button></div>
+                        <div class="guide-card"><div class="guide-icon">☕</div><div class="guide-title" data-i18n="reward_cafe">Café Discount</div><div class="guide-description" style="color:var(--gold);font-weight:600" data-i18n="reward_cafe_desc">150 coins = Free coffee</div><button onclick="redeemReward('Free Coffee',150)" style="margin-top:0.75rem;width:100%;background:linear-gradient(135deg,#2e7d32,#66bb6a);color:white;border:none;border-radius:10px;padding:0.5rem;font-size:0.85rem;font-weight:700;cursor:pointer" aria-label="Redeem free coffee for 150 coins">☕ Redeem</button></div>
+                    </div>
+                </div>
+                <div class="leaderboard">
+                    <h3 style="margin-bottom:1.5rem" data-i18n="rewards_leaderboard_title">🌍 Neighbourhood Green Board</h3>
+                    <div class="leaderboard-item"><div class="leaderboard-rank rank-1">🥇</div><div class="leaderboard-avatar">👴</div><div class="leaderboard-info"><div class="leaderboard-name">Ravi Kumar</div><div style="font-size:0.9rem;color:#666">Level 9 - Planet Protector</div></div><div class="leaderboard-points">2,100 coins</div></div>
+                    <div class="leaderboard-item"><div class="leaderboard-rank rank-2">🥈</div><div class="leaderboard-avatar">👩</div><div class="leaderboard-info"><div class="leaderboard-name">Priya Nair</div><div style="font-size:0.9rem;color:#666">Level 8 - Zero Waste Hero</div></div><div class="leaderboard-points">1,740 coins</div></div>
+                    <div class="leaderboard-item"><div class="leaderboard-rank rank-3">🥉</div><div class="leaderboard-avatar">👨</div><div class="leaderboard-info"><div class="leaderboard-name">Arjun Mehta</div><div style="font-size:0.9rem;color:#666">Level 7 - Carbon Crusher</div></div><div class="leaderboard-points">1,390 coins</div></div>
+                    <div class="leaderboard-item" style="background:#e8f5e9"><div class="leaderboard-rank" style="color:var(--primary-green)">—</div><div class="leaderboard-avatar" style="background:var(--primary-green);color:white">👤</div><div class="leaderboard-info"><div class="leaderboard-name" id="leaderboardUserName">You (Google User)</div><div style="font-size:0.9rem;color:#666">Level 1 - Eco Newcomer 🌱</div></div><div class="leaderboard-points">0 coins</div></div>
+                </div>
+            </div>
+
+            <!-- Community Ward Tab -->
+            <div id="community" class="tab-content">
+                <div class="ward-hero">
+                    <h2 data-i18n="ward_title">🏘️ Ward 12 — Anna Nagar East</h2>
+                    <p data-i18n="ward_subtitle">Join your neighbours in monthly sustainability challenges.</p>
+                    <div class="ward-meta">
+                        <div class="ward-meta-item"><div class="label" data-i18n="ward_members">Ward Members</div><div class="value">1,247</div></div>
+                        <div class="ward-meta-item"><div class="label" data-i18n="ward_active_challenges">Active Challenges</div><div class="value">3</div></div>
+                        <div class="ward-meta-item"><div class="label" data-i18n="ward_rank">Ward Rank (City)</div><div class="value">🥈 #2 of 48</div></div>
+                        <div class="ward-meta-item"><div class="label" data-i18n="ward_co2">Month's CO₂ Saved</div><div class="value">4.2 tonnes</div></div>
+                    </div>
+                </div>
+                <h3 style="margin-bottom:1rem;font-size:1.2rem;color:#333">🎯 Active Challenges This Month</h3>
+                <div class="challenge-grid">
+                    <div class="challenge-card"><div class="challenge-header"><div class="challenge-icon">♻️</div><div class="challenge-badge badge-active">Active</div></div><div class="challenge-title">Reduce General Waste by 15%</div><div class="challenge-desc">Collectively lower our ward's general waste output compared to last month.</div><div class="progress-section"><div class="progress-header"><span class="progress-label">Ward Progress</span><span class="progress-pct">68%</span></div><div class="progress-track"><div class="progress-fill" style="width:68%"></div></div></div><div class="challenge-stats"><div class="ch-stat"><div class="v">847</div><div class="l">Participants</div></div><div class="ch-stat"><div class="v">12 days</div><div class="l">Remaining</div></div><div class="ch-stat"><div class="v">500🪙</div><div class="l">Reward Each</div></div></div><button class="join-btn joined" onclick="toggleJoin(this)">✅ Joined — You're Contributing!</button></div>
+                    <div class="challenge-card urgent"><div class="challenge-header"><div class="challenge-icon">🌊</div><div class="challenge-badge badge-urgent">Ends in 3 days!</div></div><div class="challenge-title">Zero Plastic Bags Week</div><div class="challenge-desc">Report every plastic bag you refused or replaced with a cloth bag.</div><div class="progress-section"><div class="progress-header"><span class="progress-label">Pledges Collected</span><span class="progress-pct" style="color:var(--danger-red)">82%</span></div><div class="progress-track"><div class="progress-fill urgent" style="width:82%"></div></div></div><div class="challenge-stats"><div class="ch-stat"><div class="v">1,640</div><div class="l">Pledges</div></div><div class="ch-stat"><div class="v">3 days</div><div class="l">Remaining</div></div><div class="ch-stat"><div class="v">300🪙</div><div class="l">Reward Each</div></div></div><button class="join-btn primary" onclick="toggleJoin(this)">🤝 Take the Pledge</button></div>
+                    <div class="challenge-card ongoing"><div class="challenge-header"><div class="challenge-icon">🌳</div><div class="challenge-badge badge-ongoing">Ongoing</div></div><div class="challenge-title">Compost 500 kg Organic Waste</div><div class="challenge-desc">Log your organic waste sent to the community composting unit.</div><div class="progress-section"><div class="progress-header"><span class="progress-label">Composted</span><span class="progress-pct" style="color:#3498db">44%</span></div><div class="progress-track"><div class="progress-fill blue" style="width:44%"></div></div></div><div class="challenge-stats"><div class="ch-stat"><div class="v">220 kg</div><div class="l">Composted</div></div><div class="ch-stat"><div class="v">18 days</div><div class="l">Remaining</div></div><div class="ch-stat"><div class="v">200🪙</div><div class="l">Reward Each</div></div></div><button class="join-btn primary" onclick="toggleJoin(this)">🌿 Join Challenge</button></div>
+                </div>
+                <div class="ward-leaderboard">
+                    <h3 style="margin-bottom:1.25rem;font-size:1.15rem" data-i18n="ward_leaderboard_title">🏙️ City-Wide Ward Leaderboard</h3>
+                    <div class="ward-lb-item"><div class="ward-rank rank-1">🥇</div><div class="ward-flag">🌳</div><div><div class="ward-name">Ward 7 — Velachery</div><div class="ward-sub">2,104 members</div></div><div class="ward-score">9,820 pts<div class="sub">this month</div></div></div>
+                    <div class="ward-lb-item my-ward"><div class="ward-rank rank-2">🥈</div><div class="ward-flag">🏘️</div><div><div class="ward-name">Ward 12 — Anna Nagar East <span style="font-size:0.78rem;background:#d4edda;color:#155724;padding:2px 8px;border-radius:10px;margin-left:6px;">Your Ward</span></div><div class="ward-sub">1,247 members</div></div><div class="ward-score" style="color:#2980b9">8,410 pts<div class="sub">this month</div></div></div>
+                    <div class="ward-lb-item"><div class="ward-rank rank-3">🥉</div><div class="ward-flag">🌿</div><div><div class="ward-name">Ward 3 — T. Nagar</div><div class="ward-sub">1,893 members</div></div><div class="ward-score" style="color:var(--bronze)">7,330 pts<div class="sub">this month</div></div></div>
+                </div>
+                <!-- Global Cities Leaderboard -->
+                <div class="global-lb-wrap">
+                    <h3 data-i18n="global_lb_title">🌍 Global City Sustainability Leaderboard</h3>
+                    <div id="globalCitiesLb"></div>
+                </div>
+
+                <div class="community-feed">
+                    <h3 style="margin-bottom:1.25rem;font-size:1.15rem" data-i18n="ward_feed_title">📢 Ward Activity Feed</h3>
+                    <div class="feed-item"><div class="feed-avatar">👴</div><div class="feed-body"><div class="feed-text"><strong>Ravi Kumar</strong> logged 4.5 kg of organic waste 🌿</div><div class="feed-time" data-ts-offset="120000">2 minutes ago</div></div></div>
+                    <div class="feed-item"><div class="feed-avatar">🏘️</div><div class="feed-body"><div class="feed-text"><strong>Ward 12</strong> crossed <strong>68%</strong> on the Reduce General Waste challenge! 🎉</div><div class="feed-time" data-ts-offset="900000">15 minutes ago</div></div></div>
+                    <div class="feed-item"><div class="feed-avatar">👩</div><div class="feed-body"><div class="feed-text"><strong>Priya Nair</strong> took the Zero Plastic Bags pledge and earned 300 coins 🧺</div><div class="feed-time" data-ts-offset="3600000">1 hour ago</div></div></div>
+                </div>
+            </div>
+
+            <!-- Impact Certificate Tab -->
+            <div id="certificate" class="tab-content">
+                <div class="cert-page">
+                    <div style="margin-bottom:1.5rem"><h2 data-i18n="cert_title">🎓 Your Impact Certificate</h2><p style="color:#666" data-i18n="cert_subtitle">A verified record of your environmental contribution.</p></div>
+                    <div class="cert-controls">
+                        <button class="cert-btn outline" onclick="window.print()">🖨️ Print</button>
+                        <button class="cert-btn primary" onclick="downloadCertificate()">⬇️ Download PDF</button>
+                    </div>
+                    <div id="impactCertificate">
+                        <div class="cert-border-frame">
+                            <div class="cert-inner">
+                                <div class="cert-watermark">♻️ EcoWaste Pro</div>
+                                <div class="cert-header-row">
+                                    <div class="cert-logo"><span>♻️</span> EcoWaste Pro</div>
+                                    <div class="cert-issued"><strong>Certificate No.</strong>ECO-2026-WD12-00847<br><span id="certDate">Issued: February 2026</span></div>
+                                </div>
+                                <div class="cert-title-block">
+                                    <div class="cert-eyebrow" data-i18n="cert_eyebrow">This Certificate Proudly Recognises</div>
+                                    <div class="cert-title" data-i18n="cert_main_title">Environmental Impact Certificate</div>
+                                    <div class="cert-recipient" data-i18n="cert_certify">This is to certify that</div>
+                                    <div class="cert-name-display" id="certName">Google User</div>
+                                    <div class="cert-recipient" data-i18n="cert_contribution">has made a measurable, verified contribution to environmental sustainability through responsible waste management.</div>
+                                </div>
+                                <hr class="cert-divider">
+                                <div class="cert-metrics">
+                                    <div class="cert-metric"><div class="icon">♻️</div><div class="val" id="certRecycled">0 kg</div><div class="lbl" data-i18n="cert_metric_recycled">Waste Recycled</div></div>
+                                    <div class="cert-metric"><div class="icon">🌱</div><div class="val" id="certCO2">0 kg</div><div class="lbl" data-i18n="cert_metric_co2">CO₂ Prevented</div></div>
+                                    <div class="cert-metric"><div class="icon">🗑️</div><div class="val" id="certPickups">0</div><div class="lbl" data-i18n="cert_metric_pickups">Pickups Done</div></div>
+                                    <div class="cert-metric"><div class="icon">🏘️</div><div class="val" id="certChallenges">0</div><div class="lbl" data-i18n="cert_metric_challenges">Challenges</div></div>
+                                </div>
+                                <div class="cert-achievements">
+                                    <div class="cert-badge">🌍 Planet Protector</div>
+                                    <div class="cert-badge">🌊 Ocean Guardian</div>
+                                    <div class="cert-badge">🏘️ Ward Champion</div>
+                                    <div class="cert-badge">♻️ Waste Wizard</div>
+                                </div>
+                                <hr class="cert-divider">
+                                <div class="cert-footer-row">
+                                    <div style="display:flex;gap:1rem;align-items:center"><div class="cert-seal">♻️</div><div><div style="font-weight:700;color:#333">EcoWaste Pro</div><div style="font-size:0.78rem;color:#999" data-i18n="cert_platform">Certified Smart Waste Platform</div></div></div>
+                                    <div style="display:flex;gap:1.5rem;align-items:flex-end"><div id="certQrCode" style="width:80px;height:80px;background:white;border:2px solid #eee;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center"></div><div class="cert-signature-block"><div class="cert-signature">EcoWaste Pro</div><div class="cert-sig-label" data-i18n="cert_authority">Platform Authority</div></div></div>
+                                </div>
+                            </div>
+                            <div class="cert-verify-strip"><span data-i18n="cert_verified">🔒 Verified Digital Certificate</span><span class="cert-id">ID: ECO-2026-WD12-00847</span><span data-i18n="cert_authentic">✅ Authentic</span></div>
+                        </div>
+                    </div>
+                    <div class="share-strip">
+                        <button class="share-btn whatsapp" onclick="shareOn('whatsapp')" aria-label="Share on WhatsApp">💬 WhatsApp</button>
+                        <button class="share-btn twitter" onclick="shareOn('twitter')" aria-label="Share on X (Twitter)">🐦 X</button>
+                        <button class="share-btn linkedin" onclick="shareOn('linkedin')" aria-label="Share on LinkedIn">💼 LinkedIn</button>
+                        <button class="share-btn copy" onclick="copyLink()" aria-label="Copy link">🔗 Copy Link</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================
+                 MAP TAB — LIVE CITY DASHBOARD
+            ============================================================ -->
+            <div id="map-tab" class="tab-content">
+                <h2 style="margin-bottom: 1rem; font-family: 'Space Mono', monospace; font-size: 1.3rem; letter-spacing: 0.04em;" data-i18n="map_title">🗺️ Live City Dashboard</h2>
+                <p style="margin-bottom: 1.2rem; color: #666; font-size: 0.9rem;">Real-time bin status &amp; truck tracking for Ward 12, Anna Nagar East. Bins fill automatically &mdash; trucks auto-dispatch to critical ones.</p>
+
+                <!-- Live Events Feed -->
+                <div id="liveEventFeed" style="background:#0a0e1a;border:1px solid rgba(46,204,113,0.2);border-radius:14px;padding:0.75rem 1.2rem;margin-bottom:1.2rem;min-height:48px;display:flex;align-items:center;gap:0.75rem;overflow:hidden">
+                    <div style="flex-shrink:0;width:8px;height:8px;border-radius:50%;background:#2ecc71;box-shadow:0 0 8px #2ecc71;animation:liveDotBlink 1.2s ease-in-out infinite"></div>
+                    <div id="liveEventText" style="font-family:'Space Mono',monospace;font-size:0.78rem;color:#a0f0c0;letter-spacing:0.03em">&#x23F3; Waiting for live events&hellip;</div>
+                </div>
+
+                <!-- Location status -->
+                <div id="locationStatus">
+                    <span id="locationIcon">📍</span>
+                    <span id="locationText">Requesting your location…</span>
+                </div>
+
+                <!-- City Dashboard card -->
+                <div class="city-dash-wrapper">
+                    <!-- Header -->
+                    <div class="city-dash-header">
+                        <div class="city-dash-title">
+                            <span style="font-size:1.3rem">🏙️</span>
+                            <h2>Ward 12 — Live Bin Grid</h2>
+                            <div class="city-live-badge"><span class="city-live-dot"></span>LIVE</div>
+                        </div>
+                        <div class="city-kpi-row" id="cityKpiRow">
+                            <div class="city-kpi critical"><div class="kv" id="kpiCrit">0</div><div class="kl">Critical</div></div>
+                            <div class="city-kpi warning"><div class="kv" id="kpiWarn">0</div><div class="kl">Warning</div></div>
+                            <div class="city-kpi ok"><div class="kv" id="kpiOk">0</div><div class="kl">OK</div></div>
+                            <div class="city-kpi trucks"><div class="kv" id="kpiTrucks">3</div><div class="kl">Trucks</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Map -->
+                    <div id="map"></div>
+
+                    <!-- Footer legend -->
+                    <div class="city-dash-footer">
+                        <div class="city-legend">
+                            <div class="legend-item"><div class="legend-dot crit"></div>Critical (&gt;85%)</div>
+                            <div class="legend-item"><div class="legend-dot warn"></div>Warning (60–85%)</div>
+                            <div class="legend-item"><div class="legend-dot ok"></div>OK (&lt;60%)</div>
+                            <div class="legend-item"><div class="legend-dot truck"></div>Waste Truck</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+                            <div style="display:flex;align-items:center;gap:0.5rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.4)">
+                                SPEED:
+                                <button onclick="setSimSpeed(1)" id="speedBtn1" style="padding:0.2rem 0.5rem;border-radius:4px;border:1px solid rgba(46,204,113,0.5);background:rgba(46,204,113,0.2);color:#69f0ae;cursor:pointer;font-size:0.65rem;font-family:inherit">1x</button>
+                                <button onclick="setSimSpeed(2)" id="speedBtn2" style="padding:0.2rem 0.5rem;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;font-size:0.65rem;font-family:inherit">2x</button>
+                                <button onclick="setSimSpeed(3)" id="speedBtn3" style="padding:0.2rem 0.5rem;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;font-size:0.65rem;font-family:inherit">3x</button>
+                            </div>
+                            <div class="city-footer-time">Updated: <span id="cityClockEl">--:--:--</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Floating EcoBot FAB -->
+    <button class="fab-ecobot" id="fabEcobot" onclick="toggleEcobot()" aria-label="Open EcoBot AI assistant" aria-expanded="false" style="display:none">
+        <span class="fab-icon-open"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span>
+        <span class="fab-icon-close"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
+        <span class="fab-pulse-ring"></span>
+        <span class="fab-badge" id="fabBadge">AI</span>
+    </button>
+
+    <!-- Floating Chat Panel -->
+    <div class="ecobot-float-panel" id="ecobotFloatPanel">
+        <div class="ecobot-header">
+            <div class="ecobot-avatar-ring"><div class="ecobot-avatar">🌿</div><div class="ecobot-pulse"></div></div>
+            <div class="ecobot-header-text"><h2>EcoBot <span class="ecobot-badge">AI</span></h2><p>Ask me anything about waste &amp; recycling</p></div>
+            <div style="display:flex;align-items:center;gap:0.5rem">
+                <div class="ecobot-status"><span class="ecobot-dot"></span> Online</div>
+                <button class="ecobot-close-btn" onclick="toggleEcobot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+        </div>
+        <div class="ecobot-suggestions" id="ecobotSuggestions">
+            <p class="suggestions-label">💡 Try asking:</p>
+            <div class="suggestion-chips">
+                <button class="suggestion-chip" data-i18n="suggest_pizza" onclick="sendSuggestion(this)">Can I recycle a pizza box?</button>
+                <button class="suggestion-chip" data-i18n="suggest_medicine" onclick="sendSuggestion(this)">Where to dispose old medicines?</button>
+                <button class="suggestion-chip" data-i18n="suggest_compost" onclick="sendSuggestion(this)">Compost at home in Chennai?</button>
+                <button class="suggestion-chip" data-i18n="suggest_styrofoam" onclick="sendSuggestion(this)">Is styrofoam recyclable?</button>
+            </div>
+        </div>
+        <div class="ecobot-messages" id="ecobotMessages">
+            <div class="ecobot-msg bot">
+                <div class="msg-avatar">🌿</div>
+                <div class="msg-bubble">
+                    <p data-i18n="ecobot_greeting">👋 Hi! I'm <strong>EcoBot</strong>, your AI assistant for Ward 12.<br><br>Ask me about waste classification, recycling, or how to earn more coins! 🪙</p>
+                    <span class="msg-time">Just now</span>
+                </div>
+            </div>
+        </div>
+        <div class="ecobot-input-area">
+            <div class="ecobot-input-row">
+                <textarea id="ecobotInput" class="ecobot-textarea" placeholder="Ask about recycling, waste disposal…" rows="1" onkeydown="handleEcobotKey(event)" oninput="autoResizeTextarea(this)"></textarea>
+                <button class="voice-btn" id="voiceInputBtn" onclick="toggleVoice()" title="Voice input">🎤</button>
+                <button class="ecobot-send-btn" id="ecobotSendBtn" onclick="sendEcobotMessage()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+            </div>
+            <div class="ecobot-footer-note" data-i18n="ecobot_footer">🌿 Local AI · Ward 12, Chennai · No key needed</div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="notification-toast" id="notificationToast">
+        <span id="notificationIcon" style="font-size:1.5rem">🎉</span>
+        <span id="notificationMessage">Welcome!</span>
+    </div>
+
+    <!-- 7. SDG Impact Score Overlay -->
+    <div id="sdgImpactOverlay" style="display:none;position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#0f2027,#1a6b3c);color:white;border:1.5px solid rgba(46,204,113,0.6);border-radius:16px;padding:0.85rem 1.5rem;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.4);animation:sdgPop 0.4s ease;min-width:280px;text-align:center">
+        <div style="font-size:1.4rem margin-bottom:0.2rem">🌍</div>
+        <div id="sdgImpactText" style="font-size:0.9rem;font-weight:600;color:#a0f0c0"></div>
+    </div>
+
+    <!-- GCC Acknowledgement Toast -->
+    <div id="gccToast" style="display:none;position:fixed;top:5rem;right:1.5rem;background:linear-gradient(135deg,#1565c0,#0d47a1);color:white;border-radius:14px;padding:1rem 1.4rem;z-index:9998;box-shadow:0 6px 24px rgba(0,0,0,0.3);max-width:320px;animation:sdgPop 0.4s ease">
+        <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.25rem">🏛️ GCC Ward 12 — Acknowledged</div>
+        <div id="gccToastText" style="font-size:0.82rem;opacity:0.9"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body></html>

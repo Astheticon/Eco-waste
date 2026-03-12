@@ -1,0 +1,19 @@
+{
+  "name": "EcoWaste Pro — Smart Waste Management",
+  "short_name": "EcoWaste Pro",
+  "description": "AI-powered civic waste management for Chennai Ward 12 — UN SDG 11, 12, 13, 17",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a2e1a",
+  "theme_color": "#2ecc71",
+  "orientation": "portrait-primary",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "AI Scanner", "url": "./index.html#scanner", "description": "Scan any waste item" },
+    { "name": "Live Map",   "url": "./index.html#map",     "description": "Live bin grid" }
+  ]
+}
